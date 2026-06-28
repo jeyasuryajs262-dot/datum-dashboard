@@ -9,15 +9,10 @@ const statusStyles: Record<string, string> = {
 
 export default async function ProjectsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { data: firmUser } = await supabase
-    .from('firm_users').select('firm_id').eq('user_id', user!.id).single()
 
   const { data: projects } = await supabase
     .from('projects')
     .select('id, name, location, status, start_date, created_at')
-    .eq('firm_id', firmUser?.firm_id)
     .order('created_at', { ascending: false })
 
   const projectIds = projects?.map(p => p.id) ?? []
@@ -38,10 +33,8 @@ export default async function ProjectsPage() {
           <h1 className="text-xl font-bold text-[#1a1a1a]">Projects</h1>
           <p className="text-gray-400 text-sm mt-0.5">{projects?.length ?? 0} total</p>
         </div>
-        <Link
-          href="/dashboard/projects/new"
-          className="bg-[#1a1a2e] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#2d2d4e] transition-colors"
-        >
+        <Link href="/dashboard/projects/new"
+          className="bg-[#1a1a2e] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#2d2d4e] transition-colors">
           + New Project
         </Link>
       </div>
@@ -50,18 +43,16 @@ export default async function ProjectsPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
           <p className="text-gray-300 text-lg mb-2">No projects yet</p>
           <p className="text-gray-400 text-sm mb-6">Create your first project to get started</p>
-          <Link href="/dashboard/projects/new" className="bg-[#1a1a2e] text-white rounded-lg px-5 py-2.5 text-sm font-semibold hover:bg-[#2d2d4e] transition-colors">
+          <Link href="/dashboard/projects/new"
+            className="bg-[#1a1a2e] text-white rounded-lg px-5 py-2.5 text-sm font-semibold hover:bg-[#2d2d4e] transition-colors">
             Create your first project
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {projects.map(project => (
-            <Link
-              key={project.id}
-              href={`/dashboard/projects/${project.id}`}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-gray-200 transition-all group"
-            >
+            <Link key={project.id} href={`/dashboard/projects/${project.id}`}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-gray-200 transition-all group">
               <div className="flex items-start justify-between gap-2 mb-4">
                 <h2 className="font-semibold text-[#1a1a1a] group-hover:text-[#1a1a2e] transition-colors leading-snug">
                   {project.name}

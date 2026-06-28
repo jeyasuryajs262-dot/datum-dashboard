@@ -28,14 +28,9 @@ export default function NewProjectPage() {
     setLoading(true)
     const supabase = createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data: firmUser } = await supabase
-      .from('firm_users').select('firm_id').eq('user_id', user!.id).single()
-
     const { data: project, error: insertError } = await supabase
       .from('projects')
       .insert({
-        firm_id: firmUser?.firm_id,
         name: form.name,
         location: form.location || null,
         status: form.status,

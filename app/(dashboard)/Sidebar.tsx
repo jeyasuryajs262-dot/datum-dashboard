@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname } from 'next/navigation'
 
 const navLinks = [
   {
@@ -34,16 +33,8 @@ const navLinks = [
   },
 ]
 
-export default function Sidebar({ firmName }: { firmName: string }) {
+export default function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-
-  async function handleLogout() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
 
   return (
     <aside className="w-60 shrink-0 bg-[#1a1a2e] flex flex-col min-h-screen">
@@ -73,22 +64,6 @@ export default function Sidebar({ firmName }: { firmName: string }) {
           )
         })}
       </nav>
-
-      <div className="px-3 py-4 border-t border-white/10">
-        <div className="px-3 py-2 mb-1">
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Firm</p>
-          <p className="text-sm text-slate-300 font-medium mt-0.5 truncate">{firmName}</p>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Sign out
-        </button>
-      </div>
     </aside>
   )
 }

@@ -5,7 +5,7 @@ function StatCard({ label, value, color = 'navy' }: { label: string; value: numb
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">{label}</p>
-      <p className={`text-3xl font-bold ${color === 'navy' ? 'text-[#1a1a2e]' : color === 'green' ? 'text-[#059669]' : color === 'amber' ? 'text-[#f59e0b]' : 'text-[#1a1a2e]'}`}>
+      <p className={`text-3xl font-bold ${color === 'green' ? 'text-[#059669]' : color === 'amber' ? 'text-[#f59e0b]' : 'text-[#1a1a2e]'}`}>
         {value}
       </p>
     </div>
@@ -14,42 +14,28 @@ function StatCard({ label, value, color = 'navy' }: { label: string; value: numb
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { data: firmUser } = await supabase
-    .from('firm_users')
-    .select('firm_id')
-    .eq('user_id', user!.id)
-    .single()
-
-  const firmId = firmUser?.firm_id
-
-  const { data: firmProjects } = await supabase
-    .from('projects').select('id, status').eq('firm_id', firmId)
-  const projectIds = firmProjects?.map(p => p.id) ?? []
-
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
+    { data: projects },
     { count: openIssues },
     { count: reportsThisWeek },
     { data: recentReports },
     { data: topIssues },
   ] = await Promise.all([
-    projectIds.length
-      ? supabase.from('issues').select('*', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'open')
-      : Promise.resolve({ count: 0 }),
+    supabase.from('projects').select('id, status'),
+    supabase.from('issues').select('*', { count: 'exact', head: true }).eq('status', 'open'),
     supabase.from('site_reports').select('*', { count: 'exact', head: true }).gte('submitted_at', sevenDaysAgo),
-    supabase.from('site_reports').select('id, contractor_name, project_name, zone, submitted_at, issues, project_id')
+    supabase.from('site_reports')
+      .select('id, contractor_name, project_name, zone, submitted_at, issues, project_id')
       .order('submitted_at', { ascending: false }).limit(10),
-    projectIds.length
-      ? supabase.from('issues').select('id, title, priority, projects(name)')
-          .in('project_id', projectIds).eq('status', 'open').order('created_at', { ascending: false }).limit(5)
-      : Promise.resolve({ data: [] }),
+    supabase.from('issues')
+      .select('id, title, priority, projects(name)')
+      .eq('status', 'open').order('created_at', { ascending: false }).limit(5),
   ])
 
-  const totalProjects = firmProjects?.length ?? 0
-  const activeProjects = firmProjects?.filter(p => p.status === 'active').length ?? 0
+  const totalProjects = projects?.length ?? 0
+  const activeProjects = projects?.filter(p => p.status === 'active').length ?? 0
 
   const priorityColor: Record<string, string> = {
     high: 'bg-red-50 text-red-700 border-red-100',
@@ -64,18 +50,16 @@ export default async function DashboardPage() {
         <p className="text-gray-400 text-sm mt-0.5">Your firm at a glance</p>
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Projects" value={totalProjects ?? 0} />
-        <StatCard label="Active Projects" value={activeProjects ?? 0} color="green" />
+        <StatCard label="Total Projects" value={totalProjects} />
+        <StatCard label="Active Projects" value={activeProjects} color="green" />
         <StatCard label="Open Issues" value={openIssues ?? 0} color="amber" />
         <StatCard label="Reports This Week" value={reportsThisWeek ?? 0} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Reports */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Recent Reports</h2>
           </div>
           <table className="w-full text-sm">
@@ -121,7 +105,6 @@ export default async function DashboardPage() {
           </table>
         </div>
 
-        {/* Open Issues */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Open Issues</h2>
@@ -136,11 +119,10 @@ export default async function DashboardPage() {
                     {issue.priority}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {(issue.projects as unknown as { name: string } | { name: string }[] | null) && (
-                      Array.isArray(issue.projects)
+                    {(issue.projects as unknown as { name: string } | { name: string }[] | null) &&
+                      (Array.isArray(issue.projects)
                         ? (issue.projects as { name: string }[])[0]?.name
-                        : (issue.projects as unknown as { name: string })?.name
-                    )}
+                        : (issue.projects as unknown as { name: string })?.name)}
                   </span>
                 </div>
               </div>

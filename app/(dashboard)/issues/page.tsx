@@ -3,13 +3,9 @@ import IssuesTable from './IssuesTable'
 
 export default async function IssuesPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { data: firmUser } = await supabase
-    .from('firm_users').select('firm_id').eq('user_id', user!.id).single()
 
   const { data: projects } = await supabase
-    .from('projects').select('id, name').eq('firm_id', firmUser?.firm_id).order('name')
+    .from('projects').select('id, name').order('name')
 
   const projectIds = projects?.map(p => p.id) ?? []
 
