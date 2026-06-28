@@ -25,7 +25,7 @@ export default function FlagIssueButton({
     const supabase = createClient()
     await supabase.from('issues').insert({
       project_id: projectId,
-      report_id: reportId,
+      report_id: Number(reportId),
       title,
       description: description || null,
       priority,

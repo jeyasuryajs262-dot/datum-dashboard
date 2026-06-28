@@ -23,6 +23,7 @@ type Issue = {
   priority: string
   created_at: string
   resolved_at: string | null
+  report_id?: number | null
 }
 
 const priorityColor: Record<string, string> = {
@@ -66,7 +67,7 @@ export default function ProjectTabs({
     const supabase = createClient()
     const { data } = await supabase.from('issues').insert({
       project_id: projectId,
-      report_id: flagReport.id,
+      report_id: Number(flagReport.id),
       title: flagTitle,
       description: flagDesc || null,
       priority: flagPriority,
